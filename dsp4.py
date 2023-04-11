@@ -4,15 +4,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the audio file
-file = wave.open("claplong.wav", "r")
+try:
+    file = wave.open("speech_audio.wav", "r")
+except:
+    print("Error: Unable to open audio file")
+    exit()
+
 n_frames = file.getnframes()
 signal = np.zeros(n_frames)
 
 for i in range(n_frames):
     # Read the audio samples and convert to float
-    frame = file.readframes(1)
-    sample = struct.unpack("<h", frame)[0]
-    signal[i] = sample / 32768.0
+    try:
+        frame = file.readframes(1)
+        sample = struct.unpack("<h", frame)[0]
+        signal[i] = sample / 32768.0
+    except:
+        print("Error: Unable to read audio frame at index ", i)
+        exit()
 
 file.close()
 
@@ -34,7 +43,7 @@ autocorr = autocorr[:len(signal)//hop_len]
 threshold = np.mean(autocorr) + 3*np.std(autocorr)
 is_applause = autocorr > threshold
 
-# Plot the original speech signal and the detected applause events
+# Plot the detected applause events
 plt.figure(figsize=(12, 6))
 plt.plot(signal)
 plt.vlines(np.where(is_applause)[0]*hop_len, -1, 1, color='r')

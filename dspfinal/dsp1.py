@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the audio file
-file = wave.open("claplong.wav", "r")
+file = wave.open("longclap.wav", "r")
 n_frames = file.getnframes()
 signal = np.zeros(n_frames)
 

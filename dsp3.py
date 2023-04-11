@@ -2,9 +2,10 @@ import wave
 import struct
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import find_peaks, medfilt
 
 # Load the audio file
-file = wave.open("claplong.wav", "r")
+file = wave.open("speech_audio.wav", "r")
 n_frames = file.getnframes()
 signal = np.zeros(n_frames)
 
@@ -30,11 +31,20 @@ for i in range(frame_len, len(signal)):
 autocorr = autocorr[frame_len//2:]
 autocorr = autocorr[:len(signal)//hop_len]
 
-# Apply a threshold to detect applause events
-threshold = np.mean(autocorr) + 3*np.std(autocorr)
-is_applause = autocorr > threshold
+# Apply smoothing to the autocorrelation function
+autocorr = medfilt(autocorr, kernel_size=5)
 
-# Plot the original speech signal and the detected applause events
+# Apply peak detection to find local maxima in the autocorrelation function
+peaks, _ = find_peaks(autocorr, height=np.mean(autocorr) + 3*np.std(autocorr))
+
+# Apply a threshold to detect applause events
+is_applause = np.zeros(signal.shape, dtype=bool)
+for peak in peaks:
+    start = int((peak - frame_len//2) / hop_len)
+    end = int((peak + frame_len//2) / hop_len)
+    is_applause[start:end] = True
+
+# Plot the detected applause events
 plt.figure(figsize=(12, 6))
 plt.plot(signal)
 plt.vlines(np.where(is_applause)[0]*hop_len, -1, 1, color='r')
